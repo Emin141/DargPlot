@@ -11,8 +11,7 @@ int main(int argc, char **argv) {
     }
 
     // Plots the specified csv file
-    int error = plot(argv[1]);
-    if (error) handle_error(error);
+    handle_error(plot(argv[1]));
 
     return EXIT_SUCCESS;
 }

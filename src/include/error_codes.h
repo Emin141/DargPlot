@@ -7,10 +7,6 @@
 
 #include <stdlib.h>
 
-static void handle_error(const int errorCode) {
-    fprintf(stderr, "Plotting failed with error code %d.\n", errorCode);
-    // error values are explained at the top of the header
-    exit(EXIT_FAILURE);
-}
+void handle_error(const int errorCode);
 
 #endif  // ERROR_CODES_HEADER_INCLUDED
