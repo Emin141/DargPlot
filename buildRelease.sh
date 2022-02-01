@@ -1,3 +1,3 @@
 #!/bin/bash
 
-gcc -Wall src/*.c -I src/include/ -o DargPlot
+gcc -Wall -Werror src/*.c -I src/include/ -o DargPlot
