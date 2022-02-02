@@ -4,6 +4,7 @@
 #define NO_ERROR 0
 #define ERR_NO_FILE 1
 #define ERR_NO_MEMORY 2
+#define ERR_NULL_POINTER 3
 
 #include <stdlib.h>
 

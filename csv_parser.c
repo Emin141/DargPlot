@@ -16,12 +16,11 @@ int parse_csv(const char* sourceFile, PlotData* plotData) {
 
     /* Calls the dimensions reader function */
     handle_error(get_dimensions(sourceFile, &xSize, &ySize));
+    plotData->xSize = xSize;
+    plotData->ySize = ySize;
 
     /* Allocates adequate memory for the plot data */
-    plotData->z = (double**)malloc(xSize * sizeof(double));
-    for (int i = 0; i < xSize; i++) {
-        plotData->z[i] = (double*)malloc(ySize * sizeof(double));
-    }
+    plotData->z = (double*)malloc(xSize * ySize * sizeof(double));
 
     /* Reads the file for full parsing */
     FILE* inputFile = NULL;
@@ -29,17 +28,25 @@ int parse_csv(const char* sourceFile, PlotData* plotData) {
         return ERR_NO_FILE;
     }
 
-    // Line buffer
+    /* Line buffer */
     size_t lineSize = MAX_STRING_LENGTH;
     char* lineBuffer = (char*)malloc(lineSize);
     if (!lineBuffer) {  // Handles error
         return ERR_NO_MEMORY;
     }
 
+    while (getline(&lineBuffer, &lineSize, inputFile) != EOF) {
+        plotData->z[]
+    }
+
     return NO_ERROR;
 }
 
-// First run determines the dimensions of the plot
+/**************************************************
+
+ First run determines the dimensions of the plot
+
+**************************************************/
 int get_dimensions(const char* sourceFile, int* xSize, int* ySize) {
     FILE* inputFile = NULL;
     if (!(inputFile = fopen(sourceFile, "r"))) {  // Handles error

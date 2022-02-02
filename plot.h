@@ -15,8 +15,8 @@ out parameter.
 
  */
 typedef struct PlotData_S {
-    int x, y;
-    double** z;
+    int xSize, ySize;
+    double* z;
 } PlotData;
 
 /* Deallocates the PlotData object */
