@@ -18,8 +18,29 @@ int freePlotData(PlotData* plotData) {
 
 int plot(const char* sourceFile) {
     PlotData plotData = {(Axis){0, NULL}, (Axis){0, NULL}, (ZValue*){NULL}};
-    int error = parse_csv(sourceFile, &plotData);
-    if (error) handle_error(error);
+    handle_error(parse_csv(sourceFile, &plotData));
 
+#ifdef DEBUG
+    for (int i = 0; i < plotData.xAxis.numOfValues; i++) {
+        printf("%g ", plotData.xAxis.values[i]);
+    }
+    puts("");
+    for (int i = 0; i < plotData.yAxis.numOfValues; i++) {
+        printf("%g ", plotData.yAxis.values[i]);
+    }
+    puts("");
+    for (int xIndex = 0; xIndex < plotData.xAxis.numOfValues; xIndex++) {
+        for (int yIndex = 0; yIndex < plotData.yAxis.numOfValues; yIndex++) {
+            printf(
+                "z[%2$d][%3$d] = %1$g\n",
+                plotData.zValues[yIndex + xIndex * plotData.xAxis.numOfValues]
+                    .value,
+                plotData.zValues[yIndex + xIndex * plotData.xAxis.numOfValues]
+                    .xIndex,
+                plotData.zValues[yIndex + xIndex * plotData.xAxis.numOfValues]
+                    .yIndex);
+        }
+    }
+#endif
     return NO_ERROR;
 }

@@ -75,19 +75,24 @@ static int get_dimensions(const char* sourceFile, int* xSize, int* ySize) {
 
 int parse_csv(const char* sourceFile, PlotData* plotData) {
     /* Calls the dimensions reader function */
-    handle_error(get_dimensions(sourceFile, &(plotData->xAxis.numOfValues), &(plotData->yAxis.numOfValues)));
+    handle_error(get_dimensions(sourceFile, &(plotData->xAxis.numOfValues),
+                                &(plotData->yAxis.numOfValues)));
 
     /* Allocates adequate memory for the plot data */
     /* x axis allocation */
-    plotData->xAxis.values = (double*)malloc(plotData->xAxis.numOfValues * sizeof(double));
+    plotData->xAxis.values =
+        (double*)malloc(plotData->xAxis.numOfValues * sizeof(double));
     if (!(plotData->xAxis.values)) return ERR_NO_MEMORY;
 
     /* y axis allocation */
-    plotData->yAxis.values = (double*)malloc(plotData->yAxis.numOfValues * sizeof(double));
+    plotData->yAxis.values =
+        (double*)malloc(plotData->yAxis.numOfValues * sizeof(double));
     if (!(plotData->yAxis.values)) return ERR_NO_MEMORY;
 
     /* z values allocation */
-    plotData->zValues = (ZValue*)malloc(plotData->xAxis.numOfValues * plotData->yAxis.numOfValues * sizeof(ZValue));
+    plotData->zValues =
+        (ZValue*)malloc(plotData->xAxis.numOfValues *
+                        plotData->yAxis.numOfValues * sizeof(ZValue));
     if (!(plotData->zValues)) return ERR_NO_MEMORY;
 
     /* Reads the file for full parsing */
@@ -103,6 +108,72 @@ int parse_csv(const char* sourceFile, PlotData* plotData) {
         return ERR_NO_MEMORY;
     }
 
-    fclose(inputFile);
+    /* The algorithm has to run three times.
+    First time it will acquire the x values, in the second run
+    it will acquire the y values, and in the final run it will
+    aqcuire the z values. This has to be done this way because of
+    the specific way CSV files are organized */
+
+    /* Each run is inside a block, so that the variables can be dealloced */
+    { /* x run */
+        getline(&lineBuffer, &lineSize,
+                inputFile); /* Skips the variable names */
+        getline(&lineBuffer, &lineSize, inputFile);  /* Gets the first line */
+        double xPrevious = strtod(lineBuffer, NULL); /* Gets the first value */
+        double xCurrent = 0.0f;
+        int xIndex = 0;
+        plotData->xAxis.values[xIndex++] = xPrevious;
+        while (getline(&lineBuffer, &lineSize, inputFile) != EOF) {
+            xCurrent = strtod(lineBuffer, NULL);
+            if (fabs(xCurrent - xPrevious) > EPSILON) {
+                plotData->xAxis.values[xIndex++] = xCurrent;
+            }
+            xPrevious = xCurrent;
+        }
+        rewind(inputFile);
+    }
+    { /* y run */
+        getline(&lineBuffer, &lineSize,
+                inputFile); /* Skips the variable names */
+        getline(&lineBuffer, &lineSize, inputFile); /* Gets the first line */
+        double xPrevious =
+            strtod(lineBuffer, &lineBuffer); /* Gets the first x value */
+        double xCurrent = 0.0f;
+        int yIndex = 0;
+        plotData->yAxis.values[yIndex++] = strtod(lineBuffer + 1, NULL);
+        while (1) {
+            getline(&lineBuffer, &lineSize, inputFile);
+            xCurrent = strtod(lineBuffer, &lineBuffer);
+            plotData->yAxis.values[yIndex++] = strtod(lineBuffer + 1, NULL);
+            if (fabs(xCurrent - xPrevious) > EPSILON) {
+                break;
+            }
+            xPrevious = xCurrent;
+        }
+        rewind(inputFile);
+    }
+    { /* z run */
+        getline(&lineBuffer, &lineSize,
+                inputFile); /* Skips the variable names */
+        for (int xIndex = 0; xIndex < plotData->xAxis.numOfValues; xIndex++) {
+            for (int yIndex = 0; yIndex < plotData->yAxis.numOfValues;
+                 yIndex++) {
+                getline(&lineBuffer, &lineSize, inputFile);
+                /* Skips the x and y values in the line */
+                strtod(lineBuffer, &lineBuffer);
+                strtod(lineBuffer + 1, &lineBuffer);
+                /* Assigns the values of xIndex, yIndex, and z to the zValue
+                 * member */
+                plotData->zValues[yIndex + xIndex * plotData->xAxis.numOfValues]
+                    .value = strtod(lineBuffer + 1, &lineBuffer);
+                plotData->zValues[yIndex + xIndex * plotData->xAxis.numOfValues]
+                    .xIndex = xIndex;
+                plotData->zValues[yIndex + xIndex * plotData->xAxis.numOfValues]
+                    .yIndex = yIndex;
+            }
+        }
+    }
+
+    // fclose(inputFile);
     return NO_ERROR;
 }
