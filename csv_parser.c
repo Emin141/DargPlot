@@ -9,45 +9,15 @@
 #include "csv_parser.h"
 #include "error_codes.h"
 
-int get_dimensions(const char* sourceFile, int* xSize, int* ySize);
-
-int parse_csv(const char* sourceFile, PlotData* plotData) {
-    int xSize = 0, ySize = 0;
-
-    /* Calls the dimensions reader function */
-    handle_error(get_dimensions(sourceFile, &xSize, &ySize));
-    plotData->xSize = xSize;
-    plotData->ySize = ySize;
-
-    /* Allocates adequate memory for the plot data */
-    plotData->z = (double*)malloc(xSize * ySize * sizeof(double));
-
-    /* Reads the file for full parsing */
-    FILE* inputFile = NULL;
-    if (!(inputFile = fopen(sourceFile, "r"))) {  // Handles error
-        return ERR_NO_FILE;
-    }
-
-    /* Line buffer */
-    size_t lineSize = MAX_STRING_LENGTH;
-    char* lineBuffer = (char*)malloc(lineSize);
-    if (!lineBuffer) {  // Handles error
-        return ERR_NO_MEMORY;
-    }
-
-    while (getline(&lineBuffer, &lineSize, inputFile) != EOF) {
-        plotData->z[]
-    }
-
-    return NO_ERROR;
-}
-
 /**************************************************
 
  First run determines the dimensions of the plot
 
 **************************************************/
-int get_dimensions(const char* sourceFile, int* xSize, int* ySize) {
+static int get_dimensions(const char* sourceFile, int* xSize, int* ySize) {
+    (*xSize) = 0;
+    (*ySize) = 0;
+
     FILE* inputFile = NULL;
     if (!(inputFile = fopen(sourceFile, "r"))) {  // Handles error
         return ERR_NO_FILE;
@@ -55,7 +25,7 @@ int get_dimensions(const char* sourceFile, int* xSize, int* ySize) {
 
     // Line buffer
     size_t lineSize = MAX_STRING_LENGTH;
-    char* lineBuffer = (char*)malloc(lineSize);
+    char* lineBuffer = (char*)malloc(lineSize * sizeof(char));
     if (!lineBuffer) {  // Handles error
         return ERR_NO_MEMORY;
     }
@@ -99,6 +69,40 @@ int get_dimensions(const char* sourceFile, int* xSize, int* ySize) {
 #ifdef _DEBUG
     printf("numRows = %d, xSize = %d, ySize = %d\n", numRows, *xSize, *ySize);
 #endif
+    fclose(inputFile);
+    return NO_ERROR;
+}
+
+int parse_csv(const char* sourceFile, PlotData* plotData) {
+    /* Calls the dimensions reader function */
+    handle_error(get_dimensions(sourceFile, &(plotData->xAxis.numOfValues), &(plotData->yAxis.numOfValues)));
+
+    /* Allocates adequate memory for the plot data */
+    /* x axis allocation */
+    plotData->xAxis.values = (double*)malloc(plotData->xAxis.numOfValues * sizeof(double));
+    if (!(plotData->xAxis.values)) return ERR_NO_MEMORY;
+
+    /* y axis allocation */
+    plotData->yAxis.values = (double*)malloc(plotData->yAxis.numOfValues * sizeof(double));
+    if (!(plotData->yAxis.values)) return ERR_NO_MEMORY;
+
+    /* z values allocation */
+    plotData->zValues = (ZValue*)malloc(plotData->xAxis.numOfValues * plotData->yAxis.numOfValues * sizeof(ZValue));
+    if (!(plotData->zValues)) return ERR_NO_MEMORY;
+
+    /* Reads the file for full parsing */
+    FILE* inputFile = NULL;
+    if (!(inputFile = fopen(sourceFile, "r"))) {  // Handles error
+        return ERR_NO_FILE;
+    }
+
+    /* Line buffer */
+    size_t lineSize = MAX_STRING_LENGTH;
+    char* lineBuffer = (char*)malloc(lineSize);
+    if (!lineBuffer) {  // Handles error
+        return ERR_NO_MEMORY;
+    }
+
     fclose(inputFile);
     return NO_ERROR;
 }

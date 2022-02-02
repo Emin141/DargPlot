@@ -13,10 +13,21 @@ out parameter.
 
 ****************************************************************
 
- */
+*/
+
+typedef struct Axis_S {
+    int numOfValues;
+    double* values;
+} Axis;
+
+typedef struct ZValue_S {
+    int xIndex, yIndex;
+    double value;
+} ZValue;
+
 typedef struct PlotData_S {
-    int xSize, ySize;
-    double* z;
+    Axis xAxis, yAxis;
+    ZValue* zValues;
 } PlotData;
 
 /* Deallocates the PlotData object */
