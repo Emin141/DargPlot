@@ -30,9 +30,6 @@ typedef struct PlotData_S {
     ZValue* zValues;
 } PlotData;
 
-/* Deallocates the PlotData object */
-int freePlotData(PlotData* plotData);
-
 /* Plot function */
 int plot(const char* sourceFile);
 

@@ -5,6 +5,7 @@
 #define ERR_NO_FILE 1
 #define ERR_NO_MEMORY 2
 #define ERR_NULL_POINTER 3
+#define ERR_NOT_A_CSV 4
 
 #include <stdlib.h>
 

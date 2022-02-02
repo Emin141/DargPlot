@@ -6,41 +6,47 @@
 #include "csv_parser.h"
 #include "error_codes.h"
 
-int freePlotData(PlotData* plotData) {
-    if (!plotData) return ERR_NULL_POINTER;
+#ifdef FREE_WORKING
+static int freePlotData(PlotData *plotData)
+{
+    if (!plotData)
+        return ERR_NULL_POINTER;
 
     free(plotData->xAxis.values);
     free(plotData->yAxis.values);
     free(plotData->zValues);
 
+    plotData->xAxis.values = NULL;
+    plotData->yAxis.values = NULL;
+    plotData->zValues = NULL;
+
     return NO_ERROR;
 }
+#else
+static int freePlotData(PlotData *plotData) { return NO_ERROR; }
+#endif
 
-int plot(const char* sourceFile) {
-    PlotData plotData = {(Axis){0, NULL}, (Axis){0, NULL}, (ZValue*){NULL}};
-    handle_error(parse_csv(sourceFile, &plotData));
-
-#ifdef DEBUG
-    for (int i = 0; i < plotData.xAxis.numOfValues; i++) {
-        printf("%g ", plotData.xAxis.values[i]);
-    }
-    puts("");
-    for (int i = 0; i < plotData.yAxis.numOfValues; i++) {
-        printf("%g ", plotData.yAxis.values[i]);
-    }
-    puts("");
-    for (int xIndex = 0; xIndex < plotData.xAxis.numOfValues; xIndex++) {
-        for (int yIndex = 0; yIndex < plotData.yAxis.numOfValues; yIndex++) {
-            printf(
-                "z[%2$d][%3$d] = %1$g\n",
-                plotData.zValues[yIndex + xIndex * plotData.xAxis.numOfValues]
-                    .value,
-                plotData.zValues[yIndex + xIndex * plotData.xAxis.numOfValues]
-                    .xIndex,
-                plotData.zValues[yIndex + xIndex * plotData.xAxis.numOfValues]
-                    .yIndex);
+static void debug_print(PlotData *plotData)
+{
+    for (int xIndex = 0; xIndex < plotData->xAxis.numOfValues; xIndex++)
+    {
+        for (int yIndex = 0; yIndex < plotData->yAxis.numOfValues; yIndex++)
+        {
+            printf("z(%2$f, %3$f) = %1$f\n",
+                   plotData->zValues[yIndex + xIndex * plotData->xAxis.numOfValues].value,
+                   plotData->xAxis.values[xIndex],
+                   plotData->yAxis.values[yIndex]);
         }
     }
-#endif
+}
+
+int plot(const char *sourceFile)
+{
+    PlotData plotData = {(Axis){0, NULL}, (Axis){0, NULL}, (ZValue *){NULL}};
+    handle_error(parse_csv(sourceFile, &plotData));
+
+    debug_print(&plotData);
+
+    freePlotData(&plotData);
     return NO_ERROR;
 }
